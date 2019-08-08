@@ -7,24 +7,40 @@
               android:background="#000"
               tools:context=".MainActivity">
 
-    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
-                android:layout_weight="3">
+    <ScrollView
+            android:id="@+id/mScrollView"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:layout_weight="1">
         <TextView
                 android:id="@+id/mTipsTv"
                 android:layout_width="wrap_content"
                 android:textColor="#0f0"
                 android:layout_height="wrap_content"
-                android:text="Hello World!"/>
+                android:text="Hello~"/>
 
     </ScrollView>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
-                  android:layout_weight="7">
+    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:layout_weight="4">
 
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="测试"/>
+        <Button
+                android:id="@+id/mBtn1"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="获取概况"/>
 
-    </LinearLayout>
+        <Button
+                android:id="@+id/mBtn2"
+                android:layout_toEndOf="@id/mBtn1"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="获取我的"/>
+
+        <Button
+                android:id="@+id/mBtn3"
+                android:layout_toEndOf="@id/mBtn2"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="跟投最新"/>
+
+    </RelativeLayout>
 
 
 </LinearLayout>
