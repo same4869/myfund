@@ -13,11 +13,16 @@ import com.xun.myfund.utils.AppUtils
 import com.xun.myfund.utils.applySchedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import android.support.v7.app.AlertDialog
+import android.view.View
+import com.xun.myfund.bean.FundInfos
 import com.xun.myfund.utils.BmobUtils
+import com.lwb.piechart.PieChartView
 
 
 class MainActivity : AppCompatActivity() {
     private var lastItem: Item? = null
+    private var num: Int = 0
+    private var myItem: List<FundInfos>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +37,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         mBtn2.setOnClickListener {
+            var curTotleMoney = 0f
             appendToScreen("--******----------我的总览----------******--")
-            appendToScreen("--******--------我的总览结束--------******--")
+            BmobUtils.queryAllBuyFund(object : BmobUtils.BuyFundListener {
+                override fun onBuyFunds(list: List<FundInfos>) {
+                    myItem = list
+                    for (j in list) {
+                        appendToScreen("********************************")
+                        appendToScreen("名称->" + j.name)
+                        appendToScreen("代码->" + j.code)
+                        appendToScreen("金额->" + j.money)
+                        appendToScreen("购买时间->" + j.buyTime)
+                        appendToScreen("********************************")
+                        curTotleMoney += j.money
+                    }
+                    appendToScreen("目前总投资金额：$curTotleMoney")
+                    appendToScreen("--******--------我的总览结束--------******--")
+                }
+            })
         }
 
         mBtn3.setOnClickListener {
@@ -43,12 +64,61 @@ class MainActivity : AppCompatActivity() {
             }
             showADialog()
         }
+
+        mBtn4.setOnClickListener {
+            mTipsTv.text = ""
+            num = 0
+            pieView.resetPaint()
+            pieView.visibility = View.GONE
+        }
+
+        mBtn5.setOnClickListener {
+            if (myItem == null) {
+                AppUtils.showToast("先获取我的总览数据")
+                return@setOnClickListener
+            }
+            pieView.visibility = View.VISIBLE
+            showDatas()
+        }
+    }
+
+    private fun showDatas() {
+        val myFundItem = mutableListOf<FundInfos>()
+
+        for (j in 0 until myItem!!.size) {
+            var isAdd = false
+            for (k in 0 until myFundItem.size) {
+                if (myItem!![j].name == myFundItem[k].name) {
+                    val fundInfos = FundInfos()
+                    fundInfos.name = myItem!![j].name
+                    fundInfos.money = myItem!![j].money + myFundItem[k].money
+                    myFundItem[k] = fundInfos
+                    isAdd = true
+                }
+            }
+            if (!isAdd) {
+                myFundItem.add(myItem!![j])
+            }
+        }
+        pieView.setItemTextSize(18)
+        pieView.setInnerRadius(0.3f)
+        pieView.setPieCell(5)
+        pieView.setCell(5)
+        for (i in 0 until myFundItem.size) {
+            pieView.addItemType(
+                PieChartView.ItemType(
+                    myFundItem[i].name,
+                    myFundItem[i].money.toInt(),
+                    AppUtils.getRandomColor()
+                )
+            )
+        }
     }
 
     private fun showADialog() {
         val builder = AlertDialog.Builder(this)  //建立一个对象
         builder.setTitle("提示")    //标题
-        builder.setMessage("请问确定要跟投吗？")
+        builder.setMessage("请问确定要跟投吗？(当前比例10%)")
         //正面的按钮
         builder.setPositiveButton(
             "是的"
@@ -58,11 +128,11 @@ class MainActivity : AppCompatActivity() {
                 BmobUtils.buyAFundByInfo(
                     lastItem!!.trading_elements[i].fd_name,
                     lastItem!!.trading_elements[i].fd_code,
-                    100f,
-                    "2019-08-07"
+                    lastItem!!.trading_elements[i].money * 0.1f,
+                    AppUtils.timeStamp2Date(lastItem!!.trade_date)
                 )
             }
-            appendToScreen("--******----------正在完毕----------******--")
+            appendToScreen("--******----------跟投完毕----------******--")
         }
         //反面的按钮
         builder.setNegativeButton(
@@ -99,13 +169,14 @@ class MainActivity : AppCompatActivity() {
                 curTotleMoney += j.money
             }
         }
-        appendToScreen("本期总投资金额：$curTotleMoney")
+        appendToScreen("本期推荐总投资金额：$curTotleMoney")
         appendToScreen("--******--------概况总览结束--------******--")
 
     }
 
     private fun appendToScreen(str: String, split: String = "\n") {
         mTipsTv.text = mTipsTv.text.toString() + split + str
+        num++
         Handler().post {
             mScrollView.fullScroll(ScrollView.FOCUS_DOWN)
         }

@@ -3,6 +3,8 @@ package com.xun.myfund.utils
 import cn.bmob.v3.exception.BmobException
 import cn.bmob.v3.listener.SaveListener
 import com.xun.myfund.bean.FundInfos
+import cn.bmob.v3.BmobQuery
+import cn.bmob.v3.listener.FindListener
 
 
 object BmobUtils {
@@ -20,6 +22,26 @@ object BmobUtils {
                 } else {
                     AppUtils.showToast("buyAFundByInfo err : " + e.message)
                     LogUtils.d("kkkkkkkk", "buyAFundByInfo" + e.message)
+                }
+            }
+        })
+    }
+
+
+    interface BuyFundListener {
+        fun onBuyFunds(list: List<FundInfos>)
+    }
+
+    //查询所有已买的基金
+    fun queryAllBuyFund(buyFundListener: BuyFundListener) {
+        val categoryBmobQuery = BmobQuery<FundInfos>()
+        categoryBmobQuery.findObjects(object : FindListener<FundInfos>() {
+            override fun done(`object`: List<FundInfos>, e: BmobException?) {
+                if (e == null) {
+                    LogUtils.d("kkkkkkkk", "queryAllBuyFund size ->" + `object`.size)
+                    buyFundListener.onBuyFunds(`object`)
+                } else {
+                    LogUtils.d("kkkkkkkk", "queryAllBuyFund" + e.message)
                 }
             }
         })
